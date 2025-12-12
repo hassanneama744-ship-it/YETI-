@@ -18,6 +18,14 @@ const About: React.FC = () => {
 
   const generateMeme = async () => {
     if (!prompt.trim()) return;
+    
+    // Check if API key exists to prevent silent failures
+    if (!process.env.API_KEY) {
+      console.warn("API Key is missing. Meme generation will not work until configured.");
+      alert("Stay Frosty! The Meme Lab is still warming up (API Key not found).");
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -26,7 +34,10 @@ const About: React.FC = () => {
         contents: { parts: [{ text: `A vibrant neo-brutalist meme illustration of $YETI coin world. ${prompt}. Style: Thick black outlines, solid colors, high energy.` }] },
         config: { responseModalities: [Modality.IMAGE] },
       });
-      const data = response.candidates?.[0]?.content?.parts.find(p => p.inlineData)?.inlineData?.data;
+      
+      const parts = response.candidates?.[0]?.content?.parts;
+      const data = parts?.find(p => p.inlineData)?.inlineData?.data;
+      
       if (data) {
         const newUrl = `data:image/png;base64,${data}`;
         setCurrentImage(newUrl);
@@ -38,7 +49,7 @@ const About: React.FC = () => {
         setPrompt("");
       }
     } catch (err) { 
-      console.error(err); 
+      console.error("Meme Generation Error:", err); 
     } finally { 
       setIsGenerating(false); 
     }
@@ -65,17 +76,27 @@ const About: React.FC = () => {
                </div>
                <div className="relative aspect-video rounded-xl overflow-hidden border-4 border-black bg-slate-100 mb-4">
                  <img src={currentImage} className={`w-full h-full object-contain ${isGenerating ? 'blur-sm animate-pulse' : ''}`} alt="Canvas" />
-                 {isGenerating && <div className="absolute inset-0 flex items-center justify-center"><Snowflake className="animate-spin text-black" size={40} /></div>}
+                 {isGenerating && (
+                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 backdrop-blur-sm">
+                     <Snowflake className="animate-spin text-black mb-2" size={40} />
+                     <span className="font-comic text-xs animate-pulse">FREEZING PIXELS...</span>
+                   </div>
+                 )}
                </div>
                <div className="space-y-3">
-                 <div className="flex gap-2">
-                    <div className="flex-1 h-8 border-2 border-black rounded-lg bg-slate-50"></div>
-                    <div className="flex-1 h-8 border-2 border-black rounded-lg bg-slate-50"></div>
-                    <div className="flex-1 h-8 border-2 border-black rounded-lg bg-slate-50"></div>
-                 </div>
-                 <input value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="What feel for $YETI today? (e.g. Wojak sees 1B marketcap)" className="w-full p-4 border-2 border-black rounded-xl font-bold bg-slate-50 text-sm" />
-                 <button onClick={generateMeme} className="w-full bg-[#4db6ff] text-white border-4 border-black py-4 rounded-xl font-comic text-xl hover:translate-y-1 transition-all neo-shadow active:shadow-none uppercase">
-                   Generate $YETI Meme
+                 <input 
+                    value={prompt} 
+                    onChange={e => setPrompt(e.target.value)} 
+                    onKeyPress={(e) => e.key === 'Enter' && generateMeme()}
+                    placeholder="What's $YETI doing? (e.g. Surfing on an avalanche)" 
+                    className="w-full p-4 border-2 border-black rounded-xl font-bold bg-slate-50 text-sm outline-none focus:border-[#4db6ff]" 
+                 />
+                 <button 
+                    onClick={generateMeme} 
+                    disabled={isGenerating}
+                    className="w-full bg-[#4db6ff] text-white border-4 border-black py-4 rounded-xl font-comic text-xl hover:translate-y-1 transition-all neo-shadow active:shadow-none disabled:opacity-50 disabled:translate-y-0 uppercase"
+                 >
+                   {isGenerating ? 'Cooking...' : 'Generate $YETI Meme'}
                  </button>
                </div>
              </div>
@@ -139,7 +160,6 @@ const About: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {/* Fillers to show layout if less than 8 */}
               {Array.from({ length: Math.max(0, 8 - recentMemes.length) }).map((_, idx) => (
                 <div key={`filler-${idx}`} className="bg-[#1a3d54] border-4 border-black border-dashed rounded-2xl aspect-square flex items-center justify-center opacity-30">
                   <Snowflake size={24} />

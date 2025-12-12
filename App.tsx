@@ -1,11 +1,11 @@
 import React from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import Marquee from './components/Marquee';
-import About from './components/About';
-import Roadmap from './components/Roadmap';
-import Tokenomics from './components/Tokenomics';
-import Socials from './components/Socials';
+import Navbar from './components/Navbar.tsx';
+import Hero from './components/Hero.tsx';
+import Marquee from './components/Marquee.tsx';
+import About from './components/About.tsx';
+import Roadmap from './components/Roadmap.tsx';
+import Tokenomics from './components/Tokenomics.tsx';
+import Socials from './components/Socials.tsx';
 
 const App: React.FC = () => {
   return (
